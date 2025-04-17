@@ -1,0 +1,39 @@
+body {
+    background-color: #f0f8ff; /* light blue */
+    font-family: Arial, sans-serif;
+    color: #333333;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+h1 {
+    color: darkgreen;
+    font-size: xx-large;
+    font-weight: bold;
+}
+
+img {
+    border: 2px solid black;
+    margin-bottom: 10px;
+}
+
+.tableau {
+    padding: 10px;
+    max-width: 100%;
+    background-color: #fefefe
+}
+
+.video-section {
+    border: 1px solid #999;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: #fefefe;
+}
+
+.history-section{
+    border: 1px solid #999;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: #fefefe;
+}

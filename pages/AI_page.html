@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸 Advanced Schedule Optimizer 🌸</title>
+    <style>
+        /* --- Pastel Theme & Base Styles (Similar to previous, adjusted for layout) --- */
+        :root {
+            --bg-light: #fff0f5; /* Lavender Blush */
+            --bg-section: #f0f8ff; /* Alice Blue */
+            --bg-card: #ffffff; /* White */
+            --bg-completed-card: #f5f5f5; /* White Smoke */
+            --text-main: #5d5d5d; /* Dim Gray */
+            --text-light: #777;
+            --accent-pink: #ffb6c1; /* Light Pink */
+            --accent-blue: #add8e6; /* Light Blue */
+            --accent-green: #98fb98; /* Pale Green */
+            --accent-yellow: #fffacd; /* Lemon Chiffon */
+            --border-color: #e0e0e0;
+            --priority-high: #ff69b4; /* Hot Pink */
+            --priority-medium: #ffa07a; /* Light Salmon */
+            --priority-low: #87cefa; /* Light Sky Blue */
+            --danger-color: #ff7f7f; /* Soft Red */
+            --shadow-color: rgba(180, 180, 200, 0.2);
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            padding: 15px;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            color: var(--accent-pink);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+         h1 { font-size: 1.8em; margin-bottom: 20px; }
+         h2 { font-size: 1.4em; margin-top: 20px; color: var(--accent-blue); }
+         h3 { font-size: 1.1em; color: var(--accent-green); text-align: left; margin-bottom: 10px; }
+
+        button {
+            font-family: var(--font-family);
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            background-color: var(--accent-pink);
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            white-space: nowrap;
+        }
+        button:hover { background-color: #ff9ab2; }
+        button:active { transform: scale(0.98); }
+        button.delete-btn { background-color: transparent; color: var(--danger-color); box-shadow: none; font-size: 1.1em; padding: 2px 4px; }
+        button.delete-btn:hover { background-color: rgba(255, 127, 127, 0.1); }
+
+        input[type="text"], input[type="number"], input[type="date"], input[type="time"], select {
+            font-family: var(--font-family);
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            width: 100%;
+            background-color: var(--bg-card);
+            color: var(--text-main);
+        }
+        select { appearance: none; background-image: url('...'); /* Re-add arrow SVG if desired */ padding-right: 30px; }
+        input[type="checkbox"] { margin-right: 8px; accent-color: var(--accent-pink); width: auto; transform: scale(1.2); vertical-align: middle; }
+
+        label { display: block; margin-bottom: 3px; font-weight: bold; font-size: 0.9em; color: var(--accent-blue); }
+
+        .main-container {
+            display: grid;
+            /* Adjust grid for potentially 4 columns, allowing wrap */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1600px; /* Allow wider layout */
+            margin: 0 auto;
+        }
+
+        .section {
+            background-color: var(--bg-section);
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+             height: fit-content; /* Prevent sections stretching unnecessarily */
+        }
+        .section ul {
+             list-style: none;
+             padding: 0;
+             margin-top: 10px;
+             overflow-y: auto; /* Add scroll if content exceeds max height */
+             max-height: 60vh; /* Limit height of lists */
+        }
+
+        /* Specific Section Styles */
+        #availability-manager { background-color: var(--accent-yellow); }
+        #availability-manager h2 { color: #d2a679; }
+        #task-input-section { background-color: var(--accent-green); }
+        #task-input-section h2 { color: #3b8b3b; }
+        #active-schedule-section h2 { color: var(--accent-blue); }
+        #completed-tasks-section h2 { color: var(--accent-pink); }
+
+
+        #task-input-form, #availability-form { display: flex; flex-direction: column; gap: 5px; }
+        .time-slot-input { display: flex; gap: 10px; align-items: center; }
+        .time-slot-input input[type="time"] { width: auto; flex-grow: 1; }
+        .time-slot-input button { width: auto; flex-shrink: 0; font-size: 0.8em; padding: 5px 10px;}
+
+        ul { list-style: none; padding: 0; margin-top: 15px; }
+
+        li.task-item, li.schedule-item, li.availability-slot-item {
+            background-color: var(--bg-card);
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        li.task-item-completed { background-color: var(--bg-completed-card); opacity: 0.7; }
+        li.task-item-completed .task-description { text-decoration: line-through; }
+
+        .task-details, .slot-details { flex-grow: 1; margin-right: 10px; }
+        .task-description { font-weight: bold; margin-right: 5px; }
+        .task-category-icon { font-size: 1.2em; margin-right: 8px; vertical-align: middle; }
+        .task-info, .slot-info { font-size: 0.85em; color: var(--text-light); display: inline-block; margin-right: 10px; }
+        .task-info strong, .slot-info strong { color: var(--text-main); }
+        .priority-badge { padding: 2px 8px; border-radius: 10px; font-size: 0.8em; color: white; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+        .priority-High { background-color: var(--priority-high); }
+        .priority-Medium { background-color: var(--priority-medium); }
+        .priority-Low { background-color: var(--priority-low); }
+        .deadline { font-weight: bold; color: var(--danger-color); white-space: nowrap; }
+
+        .schedule-day { margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--accent-green); }
+        .schedule-day h4 { font-size: 1em; color: var(--accent-blue); margin-bottom: 5px; }
+        .schedule-time { font-weight: bold; color: var(--accent-blue); margin-right: 8px; }
+
+        #unscheduled-tasks h3 { color: var(--danger-color); }
+        li.unscheduled { opacity: 0.8; border-left: 4px solid var(--danger-color); }
+        li.unscheduled .task-info { color: var(--danger-color); }
+
+        .placeholder { text-align: center; color: var(--text-light); padding: 20px; }
+
+        /* Ensure buttons inside lists are clickable */
+        .task-actions { flex-shrink: 0; }
+        .task-actions button { pointer-events: auto; }
+
+    </style>
+</head>
+<body>
+
+    <h1>🌸 Advanced Schedule Optimizer 🌸</h1>
+
+    <div class="main-container">
+
+        <div class="section" id="availability-manager">
+            <h2>My Availability ⏰</h2>
+            <form id="availability-form">
+                <label for="availability-date">Select Date:</label>
+                <input type="date" id="availability-date" required>
+
+                <label>Add Time Slot:</label>
+                <div class="time-slot-input">
+                    <input type="time" id="availability-start-time" required>
+                    <span>to</span>
+                    <input type="time" id="availability-end-time" required>
+                    <button type="submit" id="add-slot-btn" style="background-color: #f8d775;">Add</button>
+                </div>
+            </form>
+            <h3>Defined Slots for <span id="availability-display-date">Selected Date</span>:</h3>
+            <ul id="availability-slots-list">
+                <li class="placeholder">Select a date to view/add slots.</li>
+            </ul>
+        </div>
+
+        <div class="section" id="task-input-section">
+            <h2>New Task ✨</h2>
+            <form id="task-input-form">
+                <label for="task-desc">📝 Description:</label>
+                <input type="text" id="task-desc" required>
+
+                <label for="task-duration">⏳ Duration (minutes):</label>
+                <input type="number" id="task-duration" min="1" required>
+
+                <label for="task-priority">⭐ Priority:</label>
+                <select id="task-priority">
+                    <option value="High">High</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+
+                 <label for="task-category">🏷️ Category:</label>
+                 <select id="task-category">
+                     <option value="Work">💼 Work</option>
+                     <option value="Study">📚 Study</option>
+                     <option value="Personal">🏠 Personal</option>
+                     <option value="Errands">🛒 Errands</option>
+                     <option value="Creative">🎨 Creative</option>
+                     <option value="Exercise">🏃‍♀️ Exercise</option>
+                     <option value="Other">❓ Other</option>
+                 </select>
+
+                <label for="task-deadline">🗓️ Deadline:</label>
+                <input type="date" id="task-deadline" required>
+
+                <button type="submit" id="add-task-btn" style="background-color: #78cc78; margin-top: 15px;">Add Task</button>
+            </form>
+        </div>
+
+        <div class="section" id="active-schedule-section">
+            <h2>Active Schedule 📅</h2>
+             <h3>Task List (Pending):</h3>
+             <ul id="task-list">
+                 <li class="placeholder">Add tasks to see them here.</li>
+             </ul>
+             <h3 style="margin-top: 20px;">Generated Schedule:</h3>
+             <div id="schedule-output">
+                 <p class="placeholder">Schedule will appear here.</p>
+             </div>
+              <div id="unscheduled-tasks" style="margin-top: 15px;">
+                  </div>
+        </div>
+
+        <div class="section" id="completed-tasks-section">
+            <h2>Completed Tasks ✅</h2>
+            <ul id="completed-task-list">
+                <li class="placeholder">No tasks completed yet.</li>
+            </ul>
+        </div>
+
+    </div>
+
+
+    <script>
+        // --- DOM Elements ---
+        const availabilityForm = document.getElementById('availability-form');
+        const availabilityDateInput = document.getElementById('availability-date');
+        const availabilityStartTimeInput = document.getElementById('availability-start-time');
+        const availabilityEndTimeInput = document.getElementById('availability-end-time');
+        const availabilitySlotsListUl = document.getElementById('availability-slots-list');
+        const availabilityDisplayDateSpan = document.getElementById('availability-display-date');
+
+        const taskForm = document.getElementById('task-input-form');
+        const taskDescInput = document.getElementById('task-desc');
+        const taskDurationInput = document.getElementById('task-duration');
+        const taskPriorityInput = document.getElementById('task-priority');
+        const taskCategoryInput = document.getElementById('task-category');
+        const taskDeadlineInput = document.getElementById('task-deadline');
+
+        const taskListUl = document.getElementById('task-list');
+        const scheduleOutputDiv = document.getElementById('schedule-output');
+        const unscheduledTasksDiv = document.getElementById('unscheduled-tasks');
+        const completedTaskListUl = document.getElementById('completed-task-list');
+
+        // --- Data ---
+        let tasks = []; // { id, description, duration, priority, category, deadline, isCompleted, isScheduled, scheduledDate, scheduledStart, scheduledEnd, reason }
+        let availability = {}; // { 'YYYY-MM-DD': [ { start: 'HH:MM', end: 'HH:MM' }, ... ] }
+
+        // --- Icons & Priority Maps (Same as before) ---
+         const categoryIcons = { 'Work': '💼', 'Study': '📚', 'Personal': '🏠', 'Errands': '🛒', 'Creative': '🎨', 'Exercise': '🏃‍♀️', 'Other': '❓' };
+         const priorityMap = { 'High': 1, 'Medium': 2, 'Low': 3 };
+
+        // --- Utility Functions ---
+        function generateId(prefix = 'item') { return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; }
+        function formatDate(dateString) { /* ... (same as before) ... */ if (!dateString) return 'No Deadline'; const date = new Date(dateString + 'T00:00:00'); if (isNaN(date.getTime())) return 'Invalid Date'; return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }); }
+        function getTodayDateString() { /* ... (same as before) ... */ const today = new Date(); today.setHours(0, 0, 0, 0); const year = today.getFullYear(); const month = String(today.getMonth() + 1).padStart(2, '0'); const day = String(today.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }
+        function addDays(dateString, days) { /* ... (same as before) ... */ const date = new Date(dateString + 'T00:00:00'); date.setDate(date.getDate() + days); const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, '0'); const day = String(date.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }
+        // Time Conversion Utilities
+        function timeToMinutes(timeStr) { // "HH:MM" -> minutes since midnight
+            if (!timeStr) return 0;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+        function minutesToTime(minutes) { // minutes since midnight -> "HH:MM"
+            const hours = String(Math.floor(minutes / 60)).padStart(2, '0');
+            const mins = String(minutes % 60).padStart(2, '0');
+            return `${hours}:${mins}`;
+        }
+
+        // --- Local Storage ---
+        function saveData() {
+            try {
+                localStorage.setItem('scheduleTasks_v2', JSON.stringify(tasks));
+                localStorage.setItem('scheduleAvailability_v2', JSON.stringify(availability));
+                console.log("Data saved (v2).");
+            } catch (e) { console.error("Could not save data to localStorage:", e); alert("Warning: Could not save data."); }
+        }
+        function loadData() {
+            try {
+                const storedTasks = localStorage.getItem('scheduleTasks_v2');
+                const storedAvailability = localStorage.getItem('scheduleAvailability_v2');
+                if (storedTasks) tasks = JSON.parse(storedTasks);
+                if (storedAvailability) availability = JSON.parse(storedAvailability);
+                console.log("Data loaded (v2).");
+            } catch (e) { console.error("Could not load data from localStorage:", e); tasks = []; availability = {}; alert("Could not load previous data."); }
+        }
+
+        // --- Rendering ---
+
+        // Render Availability Slots for Selected Date
+        function renderAvailabilitySlots(date) {
+            availabilitySlotsListUl.innerHTML = '';
+            availabilityDisplayDateSpan.textContent = formatDate(date);
+            const slots = availability[date] || [];
+
+             if (slots.length === 0) {
+                 availabilitySlotsListUl.innerHTML = '<li class="placeholder">No slots defined for this date.</li>';
+                 return;
+             }
+
+            // Sort slots by start time for display
+             slots.sort((a, b) => a.start.localeCompare(b.start));
+
+            slots.forEach((slot, index) => {
+                const li = document.createElement('li');
+                li.classList.add('availability-slot-item');
+                li.innerHTML = `
+                    <div class="slot-details">
+                         <span class="slot-info"><strong>${slot.start}</strong> - <strong>${slot.end}</strong></span>
+                         <span class="slot-info">(${timeToMinutes(slot.end) - timeToMinutes(slot.start)} min)</span>
+                     </div>
+                    <button class="delete-btn delete-slot-btn" data-date="${date}" data-index="${index}" title="Remove Slot">❌</button>
+                `;
+                availabilitySlotsListUl.appendChild(li);
+            });
+             // Add listeners to new delete buttons
+            availabilitySlotsListUl.querySelectorAll('.delete-slot-btn').forEach(btn => {
+                 btn.addEventListener('click', handleDeleteAvailabilitySlot);
+             });
+        }
+
+        // Render Task List (Active/Pending)
+        function renderTaskList() {
+            taskListUl.innerHTML = '';
+            const activeTasks = tasks.filter(task => !task.isCompleted);
+
+            if (activeTasks.length === 0) {
+                taskListUl.innerHTML = '<li class="placeholder">No active tasks! 🎉</li>';
+                return;
+            }
+
+             // Optional: Sort active tasks for display (e.g., deadline)
+            activeTasks.sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
+
+            activeTasks.forEach(task => {
+                const li = document.createElement('li');
+                li.classList.add('task-item');
+                li.dataset.taskId = task.id;
+                const categoryIcon = categoryIcons[task.category] || '❓';
+
+                li.innerHTML = `
+                    <div class="task-details">
+                        <input type="checkbox" class="task-complete-checkbox" data-task-id="${task.id}" title="Mark Completed">
+                        <span class="task-category-icon">${categoryIcon}</span>
+                        <span class="task-description">${task.description}</span>
+                        <br>
+                        <span class="task-info">Duration: <strong>${task.duration} min</strong></span>
+                        <span class="task-info">Priority: <span class="priority-badge priority-${task.priority}">${task.priority}</span></span>
+                        ${task.deadline ? `<span class="task-info deadline">Deadline: ${formatDate(task.deadline)}</span>` : ''}
+                    </div>
+                    <div class="task-actions">
+                        <button class="delete-btn delete-task-btn" data-task-id="${task.id}" title="Delete Task">🗑️</button>
+                    </div>
+                `;
+                taskListUl.appendChild(li);
+            });
+        }
+
+        // Render Completed Tasks
+        function renderCompletedTasks() {
+            completedTaskListUl.innerHTML = '';
+            const completedTasks = tasks.filter(task => task.isCompleted);
+
+            if (completedTasks.length === 0) {
+                 completedTaskListUl.innerHTML = '<li class="placeholder">No tasks completed yet.</li>';
+                 return;
+             }
+
+            // Optional: Sort completed tasks (e.g., by completion date if tracked, or description)
+            completedTasks.sort((a, b) => (a.description || '').localeCompare(b.description || ''));
+
+            completedTasks.forEach(task => {
+                const li = document.createElement('li');
+                li.classList.add('task-item', 'task-item-completed');
+                li.dataset.taskId = task.id;
+                 const categoryIcon = categoryIcons[task.category] || '❓';
+
+                li.innerHTML = `
+                    <div class="task-details">
+                         <input type="checkbox" class="task-complete-checkbox" data-task-id="${task.id}" title="Mark Incomplete" checked>
+                         <span class="task-category-icon">${categoryIcon}</span>
+                         <span class="task-description">${task.description}</span>
+                        <br>
+                         <span class="task-info">(Duration: ${task.duration} min, Prio: ${task.priority})</span>
+                         ${task.scheduledDate ? `<span class="task-info">Completed around: ${formatDate(task.scheduledDate || task.deadline)}</span>` : ''}
+                    </div>
+                    <div class="task-actions">
+                        <button class="delete-btn delete-task-btn" data-task-id="${task.id}" title="Delete Task Permanently">🗑️</button>
+                    </div>
+                `;
+                completedTaskListUl.appendChild(li);
+            });
+        }
+
+        // Render Generated Schedule
+        function renderSchedule(scheduledTasks, unscheduledTasksInput) {
+            scheduleOutputDiv.innerHTML = '';
+            unscheduledTasksDiv.innerHTML = '';
+
+            const activeTasks = tasks.filter(task => !task.isCompleted);
+            if (activeTasks.length === 0) {
+                 scheduleOutputDiv.innerHTML = '<p class="placeholder">Add some tasks!</p>';
+                 return;
+             }
+            if (scheduledTasks.length === 0 && unscheduledTasksInput.length === 0 ) {
+                 scheduleOutputDiv.innerHTML = '<p class="placeholder">No tasks to schedule yet.</p>';
+                 return; // Avoid showing unscheduled if there was nothing to schedule
+             }
+
+
+            // Group scheduled tasks by date
+            const scheduleByDate = scheduledTasks.reduce((acc, task) => {
+                const date = task.scheduledDate;
+                if (!acc[date]) acc[date] = [];
+                acc[date].push(task);
+                return acc;
+            }, {});
+
+             // Sort tasks within each day by start time
+             for(const date in scheduleByDate) {
+                 scheduleByDate[date].sort((a, b) => a.scheduledStart.localeCompare(b.scheduledStart));
+             }
+
+            const sortedDates = Object.keys(scheduleByDate).sort();
+
+            if (sortedDates.length > 0) {
+                 sortedDates.forEach(date => {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.classList.add('schedule-day');
+                    dayDiv.innerHTML = `<h4>${formatDate(date)}</h4>`;
+                    const dayList = document.createElement('ul');
+
+                    scheduleByDate[date].forEach(task => {
+                        const li = document.createElement('li');
+                        li.classList.add('schedule-item');
+                         li.dataset.taskId = task.id;
+                        const categoryIcon = categoryIcons[task.category] || '❓';
+                        li.innerHTML = `
+                            <div class="task-details">
+                                 <input type="checkbox" class="task-complete-checkbox" data-task-id="${task.id}" title="Mark Completed">
+                                 <span class="schedule-time">${task.scheduledStart} - ${task.scheduledEnd}</span>
+                                 <span class="task-category-icon">${categoryIcon}</span>
+                                 <span class="task-description">${task.description}</span>
+                                 <span class="task-info">(${task.duration} min)</span>
+                                 <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                                 ${task.deadline && task.deadline !== date ? `<span class="task-info deadline">(Deadline: ${formatDate(task.deadline)})</span>` : ''}
+                             </div>
+                              <div class="task-actions">
+                                   <button class="delete-btn delete-task-btn" data-task-id="${task.id}" title="Delete Task">🗑️</button>
+                               </div>
+                        `;
+                        dayList.appendChild(li);
+                    });
+                     dayDiv.appendChild(dayList);
+                    scheduleOutputDiv.appendChild(dayDiv);
+                 });
+             } else if (unscheduledTasksInput.length === activeTasks.length && activeTasks.length > 0) {
+                  scheduleOutputDiv.innerHTML = '<p class="placeholder">No tasks could be scheduled. Check availability or task details.</p>';
+             } else if (activeTasks.length > 0){
+                  scheduleOutputDiv.innerHTML = '<p class="placeholder">Some tasks scheduled. Check availability if tasks remain unscheduled.</p>';
+             }
+
+
+            // Display unscheduled tasks
+            if (unscheduledTasksInput.length > 0) {
+                unscheduledTasksDiv.innerHTML = `<h3>⚠️ Unscheduled Tasks</h3>`;
+                const unscheduledList = document.createElement('ul');
+                unscheduledTasksInput.forEach(task => {
+                    // Only list unscheduled tasks that are NOT completed
+                    if (task.isCompleted) return;
+
+                    const li = document.createElement('li');
+                    li.classList.add('schedule-item', 'unscheduled');
+                     li.dataset.taskId = task.id;
+                     const categoryIcon = categoryIcons[task.category] || '❓';
+                     const reason = task.reason || 'Could not find a suitable time slot before the deadline.';
+                    li.innerHTML = `
+                        <div class="task-details">
+                             <input type="checkbox" class="task-complete-checkbox" data-task-id="${task.id}" title="Mark Completed">
+                             <span class="task-category-icon">${categoryIcon}</span>
+                             <span class="task-description">${task.description}</span> <br>
+                             <span class="task-info">(Duration: ${task.duration} min, Prio: ${task.priority})</span>
+                             ${task.deadline ? `<span class="task-info deadline">Deadline: ${formatDate(task.deadline)}</span>` : ''}<br>
+                             <span class="task-info">Reason: ${reason}</span>
+                        </div>
+                         <div class="task-actions">
+                             <button class="delete-btn delete-task-btn" data-task-id="${task.id}" title="Delete Task">🗑️</button>
+                         </div>
+                    `;
+                     unscheduledList.appendChild(li);
+                });
+                if (unscheduledList.children.length > 0) {
+                     unscheduledTasksDiv.appendChild(unscheduledList);
+                 } else {
+                      unscheduledTasksDiv.innerHTML = ''; // Clear heading if only completed tasks were unscheduled
+                 }
+            }
+        }
+
+
+        // --- Core Logic & Event Handlers ---
+
+        // Availability Handling
+        function handleAddAvailabilitySlot(event) {
+            event.preventDefault();
+            const date = availabilityDateInput.value;
+            const start = availabilityStartTimeInput.value;
+            const end = availabilityEndTimeInput.value;
+
+            if (!date || !start || !end) {
+                alert('Please select a date and enter both start and end times.');
+                return;
+            }
+
+            const startMinutes = timeToMinutes(start);
+            const endMinutes = timeToMinutes(end);
+
+            if (startMinutes >= endMinutes) {
+                alert('End time must be after start time.');
+                return;
+            }
+
+            if (!availability[date]) {
+                availability[date] = [];
+            }
+
+            // Check for overlaps with existing slots on the same day
+             const newSlot = { start, end };
+             const overlaps = availability[date].some(existingSlot => {
+                 const existingStart = timeToMinutes(existingSlot.start);
+                 const existingEnd = timeToMinutes(existingSlot.end);
+                 // Overlap if new slot starts before existing ends AND new slot ends after existing starts
+                 return startMinutes < existingEnd && endMinutes > existingStart;
+             });
+
+             if (overlaps) {
+                 alert('New time slot overlaps with an existing slot on this date.');
+                 return;
+             }
+
+            availability[date].push(newSlot);
+            availability[date].sort((a, b) => a.start.localeCompare(b.start)); // Keep sorted
+
+            console.log('Added slot:', date, newSlot);
+            renderAvailabilitySlots(date); // Update UI for the current date
+            runSchedulerAndUpdateUI(); // Reschedule needed
+        }
+
+        function handleDeleteAvailabilitySlot(event) {
+            const button = event.target;
+            const date = button.dataset.date;
+            const index = parseInt(button.dataset.index, 10);
+
+            if (availability[date] && availability[date][index] !== undefined) {
+                availability[date].splice(index, 1); // Remove the slot
+                 if (availability[date].length === 0) {
+                     delete availability[date]; // Remove date entry if no slots left
+                 }
+                console.log('Removed slot:', date, index);
+                renderAvailabilitySlots(date); // Re-render slots for that date
+                runSchedulerAndUpdateUI(); // Reschedule needed
+            }
+        }
+
+        // Task Handling
+        function handleAddTask(event) {
+             event.preventDefault();
+             const description = taskDescInput.value.trim();
+             const duration = parseInt(taskDurationInput.value, 10);
+             const priority = taskPriorityInput.value;
+             const category = taskCategoryInput.value;
+             const deadline = taskDeadlineInput.value;
+             const todayStr = getTodayDateString();
+
+             if (!description || !duration || !deadline) { alert('Please fill Description, Duration, and Deadline.'); return; }
+             if (duration <= 0) { alert('Duration must be positive.'); return; }
+             if (deadline < todayStr) { alert('Deadline cannot be in the past.'); return; }
+
+             const newTask = {
+                 id: generateId('task'), description, duration, priority, category, deadline,
+                 isCompleted: false, isScheduled: false,
+                 scheduledDate: null, scheduledStart: null, scheduledEnd: null, reason: null
+             };
+             tasks.push(newTask);
+             taskForm.reset(); taskDeadlineInput.value = ''; // Clear form
+
+             runSchedulerAndUpdateUI();
+             console.log('Task added:', newTask.id);
+         }
+
+         function handleDeleteTask(taskId) {
+             tasks = tasks.filter(task => task.id !== taskId);
+             runSchedulerAndUpdateUI();
+             console.log('Task deleted:', taskId);
+         }
+
+        function handleToggleComplete(event) {
+             const checkbox = event.target;
+             if (!checkbox.classList.contains('task-complete-checkbox')) return;
+
+             const taskId = checkbox.dataset.taskId;
+             const task = tasks.find(t => t.id === taskId);
+             if (task) {
+                 task.isCompleted = checkbox.checked;
+                 console.log(`Task ${taskId} marked as ${task.isCompleted ? 'completed' : 'incomplete'}.`);
+                 // If marking incomplete, reset schedule status so it gets reconsidered
+                 if (!task.isCompleted) {
+                      task.isScheduled = false;
+                      task.scheduledDate = null;
+                      task.scheduledStart = null;
+                      task.scheduledEnd = null;
+                      task.reason = null;
+                 }
+                 runSchedulerAndUpdateUI();
+             }
+         }
+
+        // --- Scheduling Algorithm (Overhauled) ---
+        function generateSchedule() {
+            console.log("Generating schedule with time slots...");
+            const today = getTodayDateString();
+
+            // 1. Prepare Tasks: Reset non-completed tasks, filter out completed
+             let activeTasks = tasks.filter(task => !task.isCompleted);
+             activeTasks.forEach(task => {
+                 task.isScheduled = false; task.scheduledDate = null;
+                 task.scheduledStart = null; task.scheduledEnd = null; task.reason = null;
+             });
+
+             // Filter out tasks whose deadline has passed *before* today
+             let schedulableTasks = activeTasks.filter(task => !task.deadline || task.deadline >= today);
+             let pastDeadlineTasks = activeTasks.filter(task => task.deadline && task.deadline < today);
+             pastDeadlineTasks.forEach(task => task.reason = "Deadline passed.");
+
+            // 2. Sort Tasks: Deadline first, then Priority
+            schedulableTasks.sort((a, b) => {
+                const deadlineA = a.deadline || '9999-12-31';
+                const deadlineB = b.deadline || '9999-12-31';
+                if (deadlineA !== deadlineB) return deadlineA.localeCompare(deadlineB);
+                return priorityMap[a.priority] - priorityMap[b.priority];
+            });
+
+             let scheduledTasks = []; // Store successfully scheduled tasks here
+             let newlyUnscheduledTasks = []; // Store tasks that couldn't be fit
+             let occupiedSlots = {}; // Track occupied time: { 'YYYY-MM-DD': [ { startMin: M, endMin: M }, ... ] }
+
+            // 3. Scheduling Loop: Iterate through sorted tasks
+            for (const task of schedulableTasks) {
+                let isTaskScheduled = false;
+                let currentDay = today;
+
+                 // Iterate through days from today up to task's deadline
+                while (!isTaskScheduled && (!task.deadline || currentDay <= task.deadline)) {
+                    const daySlots = availability[currentDay]; // Get defined slots for this day
+
+                    if (daySlots && daySlots.length > 0) {
+                         // Iterate through the defined availability slots for the day
+                         for (const slot of daySlots) {
+                            const slotStartMin = timeToMinutes(slot.start);
+                            const slotEndMin = timeToMinutes(slot.end);
+                            let possibleStartMin = slotStartMin; // Start checking from beginning of slot
+
+                            // Try to find a non-overlapping window within this slot
+                            while (possibleStartMin + task.duration <= slotEndMin) {
+                                const possibleEndMin = possibleStartMin + task.duration;
+                                let overlaps = false;
+
+                                // Check against already occupied slots on this day
+                                const dayOccupied = occupiedSlots[currentDay] || [];
+                                for (const occupied of dayOccupied) {
+                                    // Check if [possibleStartMin, possibleEndMin) overlaps with [occupied.startMin, occupied.endMin)
+                                    if (possibleStartMin < occupied.endMin && possibleEndMin > occupied.startMin) {
+                                        overlaps = true;
+                                         // Jump possibleStartMin to the end of the overlapping block to check next available time
+                                         possibleStartMin = occupied.endMin;
+                                         break; // No need to check other occupied slots for this possibleStartMin
+                                     }
+                                }
+
+                                if (!overlaps) {
+                                    // Found a fit! Schedule the task
+                                    task.isScheduled = true;
+                                    task.scheduledDate = currentDay;
+                                    task.scheduledStart = minutesToTime(possibleStartMin);
+                                    task.scheduledEnd = minutesToTime(possibleEndMin);
+                                    scheduledTasks.push(task);
+
+                                     // Add this task's time to occupiedSlots for the day
+                                     if (!occupiedSlots[currentDay]) occupiedSlots[currentDay] = [];
+                                     occupiedSlots[currentDay].push({ startMin: possibleStartMin, endMin: possibleEndMin });
+                                     // Sort occupied slots by start time for efficient overlap checking later
+                                     occupiedSlots[currentDay].sort((a, b) => a.startMin - b.startMin);
+
+                                    isTaskScheduled = true;
+                                    console.log(`Scheduled "${task.description}" on ${currentDay} from ${task.scheduledStart} to ${task.scheduledEnd}`);
+                                    break; // Stop checking within this slot
+                                }
+                                // If it overlapped, the loop continues with the updated possibleStartMin
+                                // If it didn't overlap but didn't fit (because loop condition `possibleStartMin + task.duration <= slotEndMin` failed), loop ends.
+                                // Small increment needed if no overlap was found but we continue checking
+                                if (!overlaps && possibleStartMin + task.duration <= slotEndMin) {
+                                     possibleStartMin++; // Check next minute - can be inefficient, better jump needed?
+                                     // Optimization: Could jump to the end of the last occupied slot if it helps?
+                                 }
+
+
+                            } // End while loop searching within the slot
+
+                            if (isTaskScheduled) break; // Stop checking other slots for this day
+                        } // End for loop iterating through slots of the day
+                    } // End if(daySlots)
+
+                    if (isTaskScheduled) break; // Stop checking other days for this task
+                    currentDay = addDays(currentDay, 1); // Move to check next day
+                } // End while loop iterating through days
+
+                if (!isTaskScheduled) {
+                     task.reason = task.reason || `No suitable time slot found before deadline (${formatDate(task.deadline)}).`;
+                     newlyUnscheduledTasks.push(task);
+                     console.log(`Could not schedule "${task.description}"`);
+                 }
+            } // End for loop iterating through tasks
+
+             // Combine initially past-deadline tasks with newly unscheduled ones
+             let allUnscheduledTasks = [...pastDeadlineTasks, ...newlyUnscheduledTasks];
+
+            console.log("Schedule generation complete.");
+            return { scheduledTasks, unscheduledTasks: allUnscheduledTasks };
+        }
+
+        // --- Run Schedule & Update All UI ---
+        function runSchedulerAndUpdateUI() {
+            const { scheduledTasks, unscheduledTasks } = generateSchedule();
+            renderTaskList(); // Update pending list
+            renderSchedule(scheduledTasks, unscheduledTasks); // Update schedule & unscheduled display
+            renderCompletedTasks(); // Update completed list
+            saveData(); // Save all changes
+        }
+
+        // --- Initial Load & Event Listeners Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Loaded. Initializing advanced app...");
+             // Set min date for inputs to today
+             const todayStr = getTodayDateString();
+             taskDeadlineInput.setAttribute('min', todayStr);
+             availabilityDateInput.setAttribute('min', todayStr);
+             // Set default date for availability to today
+             availabilityDateInput.value = todayStr;
+
+
+            loadData(); // Load saved data
+
+            // Initial render of availability for today (or selected date if loaded differently)
+             renderAvailabilitySlots(availabilityDateInput.value);
+
+             runSchedulerAndUpdateUI(); // Generate schedule and render everything else
+
+            // --- Add Event Listeners ---
+            availabilityForm.addEventListener('submit', handleAddAvailabilitySlot);
+             availabilityDateInput.addEventListener('change', (e) => renderAvailabilitySlots(e.target.value)); // Update slot list on date change
+
+            taskForm.addEventListener('submit', handleAddTask);
+
+             // Delegated listeners for dynamically created buttons/checkboxes
+             document.body.addEventListener('click', (event) => {
+                 if (event.target.classList.contains('delete-task-btn')) {
+                     handleDeleteTask(event.target.dataset.taskId);
+                 }
+                 // Note: Availability slot delete listener is added directly in renderAvailabilitySlots
+             });
+            document.body.addEventListener('change', handleToggleComplete);
+
+
+            console.log("Advanced App Initialized.");
+        });
+
+    </script>
+
+</body>
+</html>
